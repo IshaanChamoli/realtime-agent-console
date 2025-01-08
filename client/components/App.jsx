@@ -134,9 +134,7 @@ export default function App() {
         </div>
       </nav>
       <main className="absolute top-16 left-0 right-0 bottom-0">
-        <section className={`absolute top-0 left-0 bottom-0 transition-all duration-300 ${
-          isSidebarOpen ? "right-[450px]" : "right-0"
-        } flex`}>
+        <section className="absolute top-0 left-0 bottom-0 right-0 flex">
           <section className="absolute top-0 left-0 right-0 bottom-32 p-4 pt-0 overflow-y-auto">
             <ToolPanel
               sendClientEvent={sendClientEvent}
@@ -157,9 +155,10 @@ export default function App() {
           </section>
         </section>
         <section 
-          className={`absolute top-0 right-0 bottom-0 transition-all duration-300 ${
-            isSidebarOpen ? "w-[450px]" : "w-0"
+          className={`absolute top-0 right-0 bottom-36 transition-all duration-500 ease-in-out transform ${
+            isSidebarOpen ? "translate-x-0 w-[450px]" : "translate-x-full w-[450px]"
           }`}
+          style={{ zIndex: 10 }}
         >
           <button 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -167,7 +166,7 @@ export default function App() {
           >
             {isSidebarOpen ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
           </button>
-          <div className={`absolute inset-0 flex flex-col border-l border-gray-200 bg-gray-50 ${
+          <div className={`absolute inset-0 flex flex-col border-l-4 border-gray-300 bg-gray-50 transition-opacity duration-500 ${
             isSidebarOpen ? "opacity-100" : "opacity-0"
           }`}>
             <div className="flex-shrink-0 p-4 border-b border-gray-200 bg-white sticky top-0 z-10">
