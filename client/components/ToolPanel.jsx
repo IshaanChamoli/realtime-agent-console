@@ -3,7 +3,6 @@ import { useEffect, useState, useRef } from "react";
 const functionDescriptions = `
 Call this function when a user asks for a color palette.
 Call pixel_art function when user asks for pixel art or simple drawings.
-Call create_game function when user asks for simple Python games like Snake, Pacman, etc.
 `;
 
 const sessionUpdate = {
@@ -64,45 +63,6 @@ const sessionUpdate = {
             },
           },
           required: ["description", "pixels", "size"],
-        },
-      },
-      {
-        type: "function",
-        name: "create_game",
-        description: "Generate simple JavaScript games that run in the browser using HTML5 Canvas",
-        parameters: {
-          type: "object",
-          strict: true,
-          properties: {
-            game_type: {
-              type: "string",
-              description: "Type of game to create (e.g., 'snake', 'pacman', 'pong')",
-            },
-            code: {
-              type: "string",
-              description: `Complete JavaScript code for the game. The code should be a function that takes a canvas parameter and returns a game controller object. Example structure:
-              function initGame(canvas) {
-                const ctx = canvas.getContext('2d');
-                // Game setup code
-                function gameLoop() {
-                  // Game loop code
-                }
-                // Start game
-                const gameInterval = setInterval(gameLoop, 1000/60);
-                // Return controller
-                return {
-                  cleanup: () => clearInterval(gameInterval),
-                  restart: () => { /* restart logic */ }
-                };
-              }
-              return initGame;`,
-            },
-            description: {
-              type: "string",
-              description: "Brief description of the game and its controls (e.g., 'Use arrow keys to move')",
-            }
-          },
-          required: ["game_type", "code", "description"],
         },
       },
     ],
@@ -226,132 +186,6 @@ function PixelArtOutput({ functionCallOutput }) {
   );
 }
 
-function GameOutput({ functionCallOutput }) {
-  const [gameStarted, setGameStarted] = useState(false);
-  const [error, setError] = useState(null);
-  const canvasRef = useRef(null);
-  const gameInstanceRef = useRef(null);
-
-  let parsedData;
-  try {
-    console.log("Parsing game data:", functionCallOutput.arguments); // Debug log
-    parsedData = JSON.parse(functionCallOutput.arguments);
-  } catch (error) {
-    console.error('JSON Parse Error:', error);
-    return (
-      <div className="bg-red-100 p-4 rounded-lg">
-        <h3 className="text-red-600 font-bold">Error Processing Game Output</h3>
-        <p>{error.message}</p>
-        <pre className="mt-2 text-xs">{functionCallOutput.arguments}</pre>
-      </div>
-    );
-  }
-
-  const { game_type, code, description } = parsedData;
-
-  useEffect(() => {
-    if (gameStarted && canvasRef.current) {
-      try {
-        // Clear any previous game instance
-        if (gameInstanceRef.current && gameInstanceRef.current.cleanup) {
-          gameInstanceRef.current.cleanup();
-        }
-
-        setError(null); // Reset error state
-        console.log("Starting game with code:", code); // Debug log
-
-        // Create a function from the code string and execute it
-        const gameFunction = new Function('canvas', code);
-        gameInstanceRef.current = gameFunction(canvasRef.current);
-
-        if (!gameInstanceRef.current || typeof gameInstanceRef.current.cleanup !== 'function') {
-          throw new Error('Game code must return an object with a cleanup function');
-        }
-      } catch (error) {
-        console.error('Game execution error:', error);
-        setError(error.message);
-        setGameStarted(false);
-      }
-    }
-
-    return () => {
-      if (gameInstanceRef.current && gameInstanceRef.current.cleanup) {
-        gameInstanceRef.current.cleanup();
-      }
-    };
-  }, [gameStarted, code]);
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="bg-gray-100 rounded-lg p-4">
-        <h2 className="text-xl font-bold mb-2">{game_type}</h2>
-        <p className="text-gray-700 mb-4">{description}</p>
-
-        {error && (
-          <div className="bg-red-100 text-red-600 p-4 rounded-lg mb-4">
-            {error}
-          </div>
-        )}
-
-        <div className="bg-white rounded-lg p-4 shadow-lg">
-          {!gameStarted ? (
-            <button
-              onClick={() => setGameStarted(true)}
-              className="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
-            >
-              Start Game
-            </button>
-          ) : (
-            <div className="flex flex-col items-center gap-4">
-              <canvas
-                ref={canvasRef}
-                width="400"
-                height="400"
-                className="border border-gray-200 rounded-lg"
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    if (gameInstanceRef.current && gameInstanceRef.current.restart) {
-                      gameInstanceRef.current.restart();
-                    } else {
-                      setGameStarted(false);
-                      setTimeout(() => setGameStarted(true), 0);
-                    }
-                  }}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
-                >
-                  Restart
-                </button>
-                <button
-                  onClick={() => {
-                    setGameStarted(false);
-                    if (gameInstanceRef.current && gameInstanceRef.current.cleanup) {
-                      gameInstanceRef.current.cleanup();
-                    }
-                  }}
-                  className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
-                >
-                  Stop
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <details className="mt-4">
-          <summary className="cursor-pointer text-gray-500 hover:text-gray-700">
-            View Source Code
-          </summary>
-          <pre className="mt-2 bg-gray-900 rounded-md p-4 overflow-x-auto">
-            <code className="text-green-400 whitespace-pre-wrap">{code}</code>
-          </pre>
-        </details>
-      </div>
-    </div>
-  );
-}
-
 export default function ToolPanel({
   isSessionActive,
   sendClientEvent,
@@ -377,21 +211,18 @@ export default function ToolPanel({
     ) {
       mostRecentEvent.response.output.forEach((output) => {
         if (output.type === "function_call") {
-          console.log("Function call detected:", output.name); // Debug log
-          console.log("Function arguments:", output.arguments); // Debug log
+          console.log("Function call detected:", output.name);
+          console.log("Function arguments:", output.arguments);
           
           setFunctionCallOutput(output);
           setActiveFunction(output.name);
           
-          // Update instructions based on function type
           setTimeout(() => {
             sendClientEvent({
               type: "response.create",
               response: {
                 instructions: output.name === "create_pixel_art" 
                   ? "ask for feedback about the pixel art - don't describe it again, just ask if they like it"
-                  : output.name === "create_game"
-                  ? "ask if they would like to try the game and if they need any clarification about how to run it"
                   : "ask for feedback about the color palette - don't repeat the colors, just ask if they like the colors",
               },
             });
@@ -421,14 +252,12 @@ export default function ToolPanel({
               </div>
               {activeFunction === "create_pixel_art" ? (
                 <PixelArtOutput functionCallOutput={functionCallOutput} />
-              ) : activeFunction === "create_game" ? (
-                <GameOutput functionCallOutput={functionCallOutput} />
               ) : (
                 <FunctionCallOutput functionCallOutput={functionCallOutput} />
               )}
             </>
           ) : (
-            <p>Ask for a color palette, pixel art drawing, or Python game...</p>
+            <p>Ask for a color palette or pixel art drawing...</p>
           )
         ) : (
           <p>Start the session to use these tools...</p>

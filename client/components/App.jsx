@@ -3,6 +3,7 @@ import logo from "/assets/openai-logomark.svg";
 import EventLog from "./EventLog";
 import SessionControls from "./SessionControls";
 import ToolPanel from "./ToolPanel";
+import { ChevronLeft, ChevronRight } from "react-feather";
 
 export default function App() {
   const [isSessionActive, setIsSessionActive] = useState(false);
@@ -10,6 +11,7 @@ export default function App() {
   const [dataChannel, setDataChannel] = useState(null);
   const peerConnection = useRef(null);
   const audioElement = useRef(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   async function startSession() {
     // Get an ephemeral key from the Fastify server
@@ -132,11 +134,18 @@ export default function App() {
         </div>
       </nav>
       <main className="absolute top-16 left-0 right-0 bottom-0">
-        <section className="absolute top-0 left-0 right-[380px] bottom-0 flex">
-          <section className="absolute top-0 left-0 right-0 bottom-32 px-4 overflow-y-auto">
-            <EventLog events={events} />
+        <section className={`absolute top-0 left-0 bottom-0 transition-all duration-300 ${
+          isSidebarOpen ? "right-[450px]" : "right-0"
+        } flex`}>
+          <section className="absolute top-0 left-0 right-0 bottom-32 p-4 pt-0 overflow-y-auto">
+            <ToolPanel
+              sendClientEvent={sendClientEvent}
+              sendTextMessage={sendTextMessage}
+              events={events}
+              isSessionActive={isSessionActive}
+            />
           </section>
-          <section className="absolute h-32 left-0 right-0 bottom-0 p-4">
+          <section className="absolute h-32 left-0 right-0 bottom-0 p-4 bg-white">
             <SessionControls
               startSession={startSession}
               stopSession={stopSession}
@@ -147,13 +156,27 @@ export default function App() {
             />
           </section>
         </section>
-        <section className="absolute top-0 w-[380px] right-0 bottom-0 p-4 pt-0 overflow-y-auto">
-          <ToolPanel
-            sendClientEvent={sendClientEvent}
-            sendTextMessage={sendTextMessage}
-            events={events}
-            isSessionActive={isSessionActive}
-          />
+        <section 
+          className={`absolute top-0 right-0 bottom-0 transition-all duration-300 ${
+            isSidebarOpen ? "w-[450px]" : "w-0"
+          }`}
+        >
+          <button 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="absolute -left-8 top-1/2 -translate-y-1/2 bg-white p-1 rounded-l-md border border-r-0 border-gray-200 hover:bg-gray-50"
+          >
+            {isSidebarOpen ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          </button>
+          <div className={`absolute inset-0 flex flex-col border-l border-gray-200 bg-gray-50 ${
+            isSidebarOpen ? "opacity-100" : "opacity-0"
+          }`}>
+            <div className="flex-shrink-0 p-4 border-b border-gray-200 bg-white sticky top-0 z-10">
+              <h2 className="text-sm font-medium text-gray-600">Session Events</h2>
+            </div>
+            <div className="flex-1 p-3 overflow-y-auto">
+              <EventLog events={events} />
+            </div>
+          </div>
         </section>
       </main>
     </>

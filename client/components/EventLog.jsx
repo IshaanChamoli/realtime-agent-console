@@ -7,23 +7,25 @@ function Event({ event, timestamp }) {
   const isClient = event.event_id && !event.event_id.startsWith("event_");
 
   return (
-    <div className="flex flex-col gap-2 p-2 rounded-md bg-gray-50">
+    <div className="flex flex-col gap-2 p-2 mb-2 rounded-md bg-white border border-gray-100">
       <div
         className="flex items-center gap-2 cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        {isClient ? (
-          <ArrowDown className="text-blue-400" />
-        ) : (
-          <ArrowUp className="text-green-400" />
-        )}
-        <div className="text-sm text-gray-500">
+        <div className="w-5 flex-shrink-0">
+          {isClient ? (
+            <ArrowDown className="text-blue-400" />
+          ) : (
+            <ArrowUp className="text-green-400" />
+          )}
+        </div>
+        <div className="text-sm text-gray-500 whitespace-nowrap overflow-hidden text-ellipsis">
           {isClient ? "client:" : "server:"}
           &nbsp;{event.type} | {timestamp}
         </div>
       </div>
       <div
-        className={`text-gray-500 bg-gray-200 p-2 rounded-md overflow-x-auto ${
+        className={`text-gray-500 bg-gray-50 p-2 rounded-md overflow-x-auto ${
           isExpanded ? "block" : "hidden"
         }`}
       >
