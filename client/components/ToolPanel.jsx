@@ -122,7 +122,16 @@ function FunctionCallOutput({ functionCallOutput }) {
 
 function PixelArtOutput({ functionCallOutput }) {
   try {
+    if (!functionCallOutput?.arguments) {
+      return <div>Invalid pixel art data</div>;
+    }
+
     const { description, pixels, size } = JSON.parse(functionCallOutput.arguments);
+    
+    if (!Array.isArray(pixels) || !pixels.length) {
+      return <div>Invalid pixel data format</div>;
+    }
+
     const pixelSize = "32px"; // Increased from 8px to 32px for larger display
     
     return (
@@ -211,7 +220,7 @@ function PixelArtOutput({ functionCallOutput }) {
     );
   } catch (error) {
     console.error("Error parsing pixel art data:", error);
-    console.log("Raw arguments:", functionCallOutput.arguments);
+    console.log("Raw arguments:", functionCallOutput?.arguments);
     return <div>Error displaying pixel art</div>;
   }
 }

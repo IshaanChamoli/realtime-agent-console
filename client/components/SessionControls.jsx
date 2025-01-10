@@ -70,9 +70,13 @@ export default function SessionControls({
   stopSession,
   sendClientEvent,
   sendTextMessage,
-  serverEvents,
-  isSessionActive,
+  serverEvents = [],
+  isSessionActive = false,
 }) {
+  if (typeof startSession !== 'function' || typeof stopSession !== 'function') {
+    return null;
+  }
+
   return (
     <div className="flex gap-4 border-t-2 border-gray-200 h-full rounded-md">
       {isSessionActive ? (

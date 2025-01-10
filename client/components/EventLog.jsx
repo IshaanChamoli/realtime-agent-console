@@ -35,14 +35,17 @@ function Event({ event, timestamp }) {
   );
 }
 
-export default function EventLog({ events }) {
+export default function EventLog({ events = [] }) {
   const eventsToDisplay = [];
   let deltaEvents = {};
 
+  if (!Array.isArray(events)) return null;
+
   events.forEach((event) => {
-    if (event.type.endsWith("delta")) {
+    if (!event) return;
+    
+    if (event.type?.endsWith("delta")) {
       if (deltaEvents[event.type]) {
-        // for now just log a single event per render pass
         return;
       } else {
         deltaEvents[event.type] = event;
@@ -51,7 +54,7 @@ export default function EventLog({ events }) {
 
     eventsToDisplay.push(
       <Event
-        key={event.event_id}
+        key={event.event_id || crypto.randomUUID()}
         event={event}
         timestamp={new Date().toLocaleTimeString()}
       />,
@@ -60,7 +63,7 @@ export default function EventLog({ events }) {
 
   return (
     <div className="flex flex-col gap-2 overflow-x-auto">
-      {events.length === 0 ? (
+      {eventsToDisplay.length === 0 ? (
         <div className="text-gray-500">Awaiting events...</div>
       ) : (
         eventsToDisplay
